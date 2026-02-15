@@ -31,7 +31,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           DEST_CHANNEL: ${{ secrets.DEST_CHANNEL }}
           FEED_URL: ${{ secrets.FEED_URL }}
-          FOLLOW_LINE: "📢 Follow https://t.me/+I7fY07pC6dlkYThl"
+          FOLLOW_LINE: "📢 Follow https://t.me/RAJBSTC2026"
         run: python bot.py
 
       - name: Commit last.txt state
