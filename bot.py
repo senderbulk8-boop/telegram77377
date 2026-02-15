@@ -19,10 +19,10 @@ TRUNC_END_RE = re.compile(r"""(?ix)
 (\s*\.\.\.\s*$)
 """)
 
-def tg_send_text(text: str):
+def tg_send_text(text: str, channel: str):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     r = requests.post(url, json={
-        "chat_id": DEST_CHANNEL,
+        "chat_id": channel,
         "text": text[:3900],
         "disable_web_page_preview": True
     }, timeout=60)
