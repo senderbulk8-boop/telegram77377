@@ -3,7 +3,7 @@ import requests
 import pikepdf
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
-DEST_CHANNEL = os.environ["DEST_CHANNEL"]
+DEST_CHANNELS = os.environ["DEST_CHANNEL"]  # comma-separated: @ch1,@ch2 or -100...
 FEED_URL = os.environ["FEED_URL"]
 FOLLOW_LINE = os.environ.get("FOLLOW_LINE", "📢 Follow @topgkguru")
 LAST_FILE = "last.txt"
@@ -28,17 +28,17 @@ def tg_send_text(text: str, channel: str):
     }, timeout=60)
     r.raise_for_status()
 
-def tg_send_photo_bytes(photo_bytes: bytes, caption: str):
+def tg_send_photo_bytes(photo_bytes: bytes, caption: str, channel: str):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
     files = {"photo": ("image.jpg", photo_bytes)}
-    data = {"chat_id": DEST_CHANNEL, "caption": caption[:900]}
+    data = {"chat_id": channel, "caption": caption[:900]}
     r = requests.post(url, data=data, files=files, timeout=180)
     r.raise_for_status()
 
-def tg_send_document_bytes(doc_bytes: bytes, filename: str, caption: str):
+def tg_send_document_bytes(doc_bytes: bytes, filename: str, caption: str, channel: str):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendDocument"
     files = {"document": (filename, doc_bytes, "application/pdf")}
-    data = {"chat_id": DEST_CHANNEL, "caption": caption[:900]}
+    data = {"chat_id": channel, "caption": caption[:900]}
     r = requests.post(url, data=data, files=files, timeout=300)
     r.raise_for_status()
 
@@ -93,7 +93,6 @@ def sanitize_pdf_remove_links(pdf_bytes: bytes) -> bytes:
             except Exception:
                 continue
 
-            # Remove actions/dests if present
             if "/A" in obj:
                 del obj["/A"]
             if "/AA" in obj:
@@ -102,8 +101,6 @@ def sanitize_pdf_remove_links(pdf_bytes: bytes) -> bytes:
                 del obj["/Dest"]
 
             subtype = obj.get("/Subtype", None)
-
-            # Drop Link annotations completely (these create clickable areas)
             if subtype == pikepdf.Name("/Link"):
                 continue
 
@@ -141,11 +138,10 @@ def parse_item(item_xml: str):
     desc = strip_tags(desc_raw)
     desc = re.sub(r"^\[Photo\]\s*", "", desc).strip()
 
-    # remove links from both
     title = remove_links(title)
     desc = remove_links(desc)
 
-    # DEDUPE for your feed (title truncated with [...])
+    # DEDUPE for truncated titles like "[...]"
     title_is_truncated = bool(TRUNC_END_RE.search(title_raw)) or bool(TRUNC_END_RE.search(title))
     t_norm = normalize(title)
 
@@ -183,9 +179,12 @@ def parse_all_items(xml: str):
     return items
 
 def main():
+    channels = [c.strip() for c in DEST_CHANNELS.split(",") if c.strip()]
+    if not channels:
+        raise RuntimeError("DEST_CHANNEL is empty. Provide @channel or -100... ids.")
+
     last_guid = read_last()
 
-    channels = [c.strip() for c in DEST_CHANNEL.split(",")]
     xml = requests.get(FEED_URL, timeout=90).text
     items = parse_all_items(xml)
     if not items:
@@ -212,27 +211,29 @@ def main():
 
         ctype = (it["enclosure_type"] or "").lower()
 
+        # download once, then send to all channels
         if it["enclosure_url"] and ctype.startswith("image/"):
             img = requests.get(it["enclosure_url"], timeout=180)
             img.raise_for_status()
-            tg_send_photo_bytes(img.content, out)
+            for ch in channels:
+                tg_send_photo_bytes(img.content, out, ch)
 
         elif it["enclosure_url"] and ctype == "application/pdf":
             pdf = requests.get(it["enclosure_url"], timeout=300)
             pdf.raise_for_status()
             safe_pdf = sanitize_pdf_remove_links(pdf.content)
-            tg_send_document_bytes(safe_pdf, "document.pdf", out)
+            for ch in channels:
+                tg_send_document_bytes(safe_pdf, "document.pdf", out, ch)
 
         else:
             for ch in channels:
-    tg_send_text(out.replace(DEST_CHANNEL, ch))
-
+                tg_send_text(out, ch)
 
         time.sleep(1)  # avoid rate-limits
 
     # Save newest guid as last processed
     write_last(new_items[-1]["guid"])
-    print("Posted", len(new_items), "items. Last:", new_items[-1]["guid"])
+    print("Posted", len(new_items), "items to", len(channels), "channels. Last:", new_items[-1]["guid"])
 
 if __name__ == "__main__":
     main()
