@@ -185,6 +185,7 @@ def parse_all_items(xml: str):
 def main():
     last_guid = read_last()
 
+    channels = [c.strip() for c in DEST_CHANNEL.split(",")]
     xml = requests.get(FEED_URL, timeout=90).text
     items = parse_all_items(xml)
     if not items:
@@ -223,7 +224,9 @@ def main():
             tg_send_document_bytes(safe_pdf, "document.pdf", out)
 
         else:
-            tg_send_text(out)
+            for ch in channels:
+    tg_send_text(out.replace(DEST_CHANNEL, ch))
+
 
         time.sleep(1)  # avoid rate-limits
 
