@@ -31,7 +31,8 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           DEST_CHANNEL: ${{ secrets.DEST_CHANNEL }}
           FEED_URL: ${{ secrets.FEED_URL }}
-          FOLLOW_LINE: "📢 Follow TELEGRAM https://t.me/RAJBSTC2026 | WHATSAPP https://whatsapp.com/channel/0029Vb6cxwVId7nVeD0xTW1n | https://t.me/RAJASTHAN_TODAY"
+          FOLLOW_LINE: "📢 Follow TELEGRAM https://t.me/RAJBSTC2026
+          WHATSAPP https://whatsapp.com/channel/0029Vb6cxwVId7nVeD0xTW1n"
         run: python bot.py
 
       - name: Commit last.txt state
@@ -40,6 +41,8 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add last.txt
-            git commit -m "Update state" || echo "No changes"
-            git push
+            git commit -m "Update last state" || true
+            git push || true
+          else
+            echo "last.txt not found, nothing to commit"
           fi
