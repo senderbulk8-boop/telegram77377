@@ -31,7 +31,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           DEST_CHANNEL: ${{ secrets.DEST_CHANNEL }}
           FEED_URL: ${{ secrets.FEED_URL }}
-          FOLLOW_LINE: "📢 Follow TELEGRAM @RAJASTHAN_TODAY | WHATSAPP https://whatsapp.com/channel/0029Vb6cxwVId7nVeD0xTW1n"
+          FOLLOW_LINE: "📢 Follow TELEGRAM https://t.me/RAJASTHAN_TODAY | WHATSAPP https://whatsapp.com/channel/0029VaZYv1G1noz4mprmxQ0q"
         run: python bot.py
 
       - name: Commit last.txt state
