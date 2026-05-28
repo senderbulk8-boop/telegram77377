@@ -2,12 +2,6 @@ name: Telegram Auto Post
 
 on:
   workflow_dispatch:
-    inputs:
-      delete_last:
-        description: 'Force Test: Delete last.txt to process old message as new?'
-        required: false
-        type: boolean
-        default: false
   schedule:
     - cron: "2/5 * * * *"
 
@@ -24,12 +18,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Handle Test Mode (Delete last.txt)
-        if: ${{ github.event.inputs.delete_last == 'true' }}
-        run: |
-          rm -f last.txt
-          echo "✅ Test Mode Active: last.txt deleted successfully!"
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -43,6 +31,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           DEST_CHANNEL: ${{ secrets.DEST_CHANNEL }}
           FEED_URL: ${{ secrets.FEED_URL }}
+          # Nayi API keys aur WP details jo miss ho gayi thi:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           WP_URL: ${{ secrets.WP_URL }}
           WP_USER: ${{ secrets.WP_USER }}
