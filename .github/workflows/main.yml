@@ -2,6 +2,12 @@ name: Telegram Auto Post
 
 on:
   workflow_dispatch:
+    inputs:
+      delete_last:
+        description: 'Force Test: Delete last.txt to process old message as new?'
+        required: false
+        type: boolean
+        default: false
   schedule:
     - cron: "2/5 * * * *"
 
@@ -18,19 +24,29 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Handle Test Mode (Delete last.txt)
+        if: ${{ github.event.inputs.delete_last == 'true' }}
+        run: |
+          rm -f last.txt
+          echo "✅ Test Mode Active: last.txt deleted successfully!"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
       - name: Install deps
-        run: pip install requests pikepdf
+        run: pip install requests pikepdf beautifulsoup4 openai
 
       - name: Run bot
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           DEST_CHANNEL: ${{ secrets.DEST_CHANNEL }}
           FEED_URL: ${{ secrets.FEED_URL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USER: ${{ secrets.WP_USER }}
+          WP_PASS: ${{ secrets.WP_PASS }}
           FOLLOW_LINE: "📢 Follow TELEGRAM WHATSAPP https://whatsapp.com/channel/0029VaZYv1G1noz4mprmxQ0q | TELEGRAM https://t.me/RAJASTHAN_TODAY"
         run: python bot.py
 
