@@ -24,18 +24,13 @@ jobs:
           python-version: "3.x"
 
       - name: Install deps
-        run: pip install requests pikepdf beautifulsoup4 openai
+        run: pip install requests pikepdf
 
       - name: Run bot
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           DEST_CHANNEL: ${{ secrets.DEST_CHANNEL }}
           FEED_URL: ${{ secrets.FEED_URL }}
-          # Nayi API keys aur WP details jo miss ho gayi thi:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          WP_URL: ${{ secrets.WP_URL }}
-          WP_USER: ${{ secrets.WP_USER }}
-          WP_PASS: ${{ secrets.WP_PASS }}
           FOLLOW_LINE: "📢 Follow TELEGRAM WHATSAPP https://whatsapp.com/channel/0029VaZYv1G1noz4mprmxQ0q | TELEGRAM https://t.me/RAJASTHAN_TODAY"
         run: python bot.py
 
